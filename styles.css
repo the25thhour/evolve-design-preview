@@ -6,8 +6,9 @@
    from #e33000 to #d42d00 so white text on it passes 5:1). Accent: the primary button, the last stage of
    the process, the footer's contact tile, focus rings. Nothing else is tinted; the products carry colour.
    Type: Schibsted Grotesk (OFL, self-hosted, variable 400-900). Square corners everywhere.
-   Visibility: nothing is hidden by default. site.js marks below-the-fold pictures .is-pending; only that
-   class hides anything, and print, reduced motion and a hidden tab all show everything. */
+   Visibility: nothing is ever hidden by motion. Pictures are in their final state in HTML and CSS; site.js
+   adds .is-in to a picture that scrolls into view, which plays a short develop (colour up, frame settles).
+   No-JS, print, a background tab and reduced motion all show the final state. */
 
 @font-face {
   font-family: 'Schibsted Grotesk';
@@ -168,10 +169,12 @@ strong { font-weight: 650; }
 .era-toggle button:active { transform: scale(0.97); }
 
 .sheet { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+@media (max-width: 74.99rem) { .sheet { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 56.24rem) { .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .frame { display: flex; flex-direction: column; min-width: 0; color: var(--ink); text-decoration: none; background: var(--bg); }
 .frame-pic { display: block; aspect-ratio: 2 / 1; overflow: hidden; background: var(--bg); }
 .frame-pic img { width: 100%; height: 100%; object-fit: contain; transition: opacity var(--t-hover) ease; }
-.sheet .frame .frame-pic img { max-width: 31.125rem; margin-inline: auto; } /* never above the 498px originals */
+.sheet .frame:not(.frame-big) .frame-pic img { max-width: 31.125rem; margin-inline: auto; } /* never above the 498px originals */
 .tag {
   display: block; height: var(--tag); padding: 0 0.6rem; overflow: hidden;
   font-size: var(--step-small); font-weight: 600; line-height: var(--tag); letter-spacing: 0; white-space: nowrap; text-overflow: ellipsis;
@@ -190,7 +193,7 @@ strong { font-weight: 650; }
 .frame-big { grid-column: 1 / -1; position: relative; }
 .frame-big .frame-pic { aspect-ratio: 3000 / 1245; }
 .frame-big .frame-pic img { object-fit: cover; object-position: 100% 50%; }
-.big-cap { position: absolute; left: clamp(1rem, 2.5vw, 2.5rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; width: min(28%, 25rem); }
+.big-cap { position: absolute; left: clamp(1rem, 2.5vw, 2.5rem); top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.75rem; width: min(28%, 25rem); }
 .big-name { font-size: var(--step-statement); font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
 .big-desc { font-size: 1rem; line-height: 1.45; }
 .big-era { padding: 0.3rem 0.6rem; font-size: var(--step-small); font-weight: 600; }
@@ -208,7 +211,7 @@ strong { font-weight: 650; }
 .sheet[data-show='earlier'] .frame-evolve .tag { background: var(--surface); color: var(--muted); }
 
 @media (max-width: 68.74rem) {
-  .big-cap { position: static; transform: none; width: auto; padding: 0.6rem 0 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.75rem; }
+  .big-cap { position: static; width: auto; padding: 0.6rem 0 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.75rem; }
   .big-name { font-size: var(--step-lead); font-weight: 750; letter-spacing: -0.02em; }
   .big-desc { display: none; }
 }
@@ -412,7 +415,7 @@ strong { font-weight: 650; }
 .ledger-head { font-size: 1rem; font-weight: 700; padding-bottom: 0.4rem; scroll-margin-top: 1.25rem; }
 .ledger-rows { list-style: none; }
 .ledger-row[hidden] { display: none; }
-.ledger-row a { display: grid; grid-template-columns: 4.5rem minmax(0, 1.8fr) minmax(0, 1fr) 7.5rem; column-gap: 1rem; align-items: center; min-height: 2.75rem; text-decoration: none; transition: color var(--t-hover) ease; }
+.ledger-row a { display: grid; grid-template-columns: 4.5rem minmax(0, 1.8fr) minmax(0, 1fr) 9.5rem; column-gap: 1rem; align-items: center; min-height: 2.75rem; text-decoration: none; transition: color var(--t-hover) ease; }
 .row-thumb { display: block; aspect-ratio: 2 / 1; background: var(--bg); border-bottom: 0.25rem solid var(--ink); }
 .ledger-row[data-era='earlier'] .row-thumb { border-bottom-color: var(--muted); }
 .row-thumb img { width: 100%; height: 100%; object-fit: contain; }
@@ -465,7 +468,7 @@ strong { font-weight: 650; }
 .project-frame.frame-earlier .tag { background: var(--muted); color: var(--bg); }
 .project-text { display: grid; gap: 1.1rem; max-width: 46rem; }
 .project-text p:not(.lead) { max-width: 60ch; }
-.pending { color: var(--muted); }
+.pending { padding: 1rem 1.25rem; background: var(--surface); font-size: var(--step-body); }
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; margin: 0.9rem 0 0; padding: 1.25rem; background: var(--surface); }
 .facts dt { font-size: var(--step-small); color: var(--muted); margin-bottom: 0.15rem; }
 .facts dd { font-size: 1rem; line-height: 1.4; }
@@ -662,14 +665,17 @@ strong { font-weight: 650; }
   .note-sheet.sheet-small .frame:nth-child(n+5) { display: flex; }
 }
 
-/* ---------- motion: added on top; only below-the-fold pictures, only when asked for ---------- */
+/* ---------- motion: one move, on pictures only, never hiding anything ----------
+   The develop: as a picture that started off screen arrives, its colour comes up from grey and the frame
+   settles from a slight enlargement, like a print coming up in the tray. The products carry the colour,
+   so the colour is what arrives. Text never moves. */
+@keyframes develop {
+  from { filter: grayscale(1) contrast(0.92); transform: scale(1.035); }
+  to { filter: none; transform: none; }
+}
 @media (prefers-reduced-motion: no-preference) {
-  [data-reveal] { transition: opacity 600ms var(--ease-out), transform 800ms var(--ease-out); transition-delay: calc(var(--i, 0) * 60ms); }
-  .is-pending { opacity: 0; transform: translateY(18px); }
-  .shutter[data-reveal] { transition: clip-path 1100ms var(--ease-in-out); transition-delay: 0ms; }
-  .shutter[data-reveal] img { transition: transform 1500ms var(--ease-soft), opacity var(--t-hover) ease; }
-  .shutter.is-pending { opacity: 1; transform: none; clip-path: inset(0 0 100% 0); }
-  .shutter.is-pending img { transform: scale(1.1); }
+  .is-in img { animation: develop 1000ms var(--ease-soft) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
+  .frame-big.is-in img, .frame-big .is-in img, .render .is-in img { animation-duration: 1500ms; }
   .frame:active, .render:active { transform: scale(0.985); transition: transform var(--t-press) var(--ease-out); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -678,11 +684,12 @@ strong { font-weight: 650; }
 
 /* ---------- print: everything shown, nothing animated ---------- */
 @media print {
-  .is-pending, [data-reveal], .shutter, .shutter img { opacity: 1 !important; transform: none !important; clip-path: none !important; transition: none !important; animation: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .sheet[data-show] .frame-pic img { opacity: 1 !important; }
   .skip-link, .nav-toggle, .era-toggle, .filters, .ledger-preview, .run-all { display: none !important; }
   .nav-list { display: flex !important; position: static !important; min-height: 0 !important; background: none !important; }
   .sheet .frame-extra, .sheet-small .frame { display: flex !important; }
-  .run-note { display: block !important; }
+  .run-note, .big-desc, .band-extra { display: block !important; }
   .frame, .craft-item, .t-item, .discipline, .press-list li, .note-list > li, .tile { break-inside: avoid; }
   .ledger-rail, .ledger-preview { position: static; }
   .section { padding-block: 2.5rem; }

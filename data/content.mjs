@@ -36,8 +36,8 @@ export const sectors = [
 
 // The two large renders that exist (3000x1245) stand in for these projects' frames on the home sheet.
 export const heroRenders = {
-  'smart-alert-remote-control-alerting-sytem': { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2017/09/slider1.png', w: 3000, h: 1245, alt: 'The Smart Alert remote control for hearing instruments, a large render on white' },
-  'pack-mobile-rechargeable-battery': { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2017/09/slider3.png', w: 3000, h: 1245, alt: 'The lime-green i-Pack mobile rechargeable battery, shown in two views' },
+  'smart-alert-remote-control-alerting-sytem': { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2017/09/slider1.png', w: 3000, h: 1245, alt: 'Render of the black Smart Alert remote in front, side and angled views, with its belt clip' },
+  'pack-mobile-rechargeable-battery': { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2017/09/slider3.png', w: 3000, h: 1245, alt: 'Render of the lime-green i-Pack battery from the back and at an angle, with its carry handle and output panel' },
 };
 
 // Per project, keyed by the live site's slug.
@@ -82,7 +82,7 @@ export const projects = {
     source: 'Portfolio page; News, July 17, 2015',
   },
   'rechargeable-battery-energy-storage-management-system': {
-    alt: 'Two dark green Energy SharePack battery units, one in a camouflage carry pouch',
+    alt: 'Dark green Energy SharePack battery units with orange status panels, one in a camouflage carry pouch',
     slug: 'energy-sharepack', name: 'Energy SharePack', short: 'Energy SharePack',
     client: 'Panacis',
     description: 'A rechargeable battery and energy storage management system for demanding military applications and advanced electronic battlefield equipment.',
@@ -148,7 +148,7 @@ export const projects = {
     source: 'Portfolio page; News, October 8, 2011',
   },
   'moxi-3g-next-generation-hearing-instrument': {
-    alt: 'Moxi 3G hearing instruments in two finishes, dark green and silver, each shown as a pair',
+    alt: 'Moxi 3G hearing instruments in two finishes, graphite and silver, each shown as a pair',
     slug: 'moxi-3g-hearing-instrument', name: 'Moxi 3G Hearing Instrument', short: 'Moxi 3G',
     description: 'A wireless 312 CRT (canal receiver technology) hearing instrument that puts advanced technology into a small, discreet design.',
     details: ['The Moxi 3G carries the design language of the Swift, and gives hearing professionals fitting options for mild to moderately severe hearing loss.'],
@@ -172,7 +172,7 @@ export const projects = {
     source: 'Portfolio page; News, May 12, 2010',
   },
   'mito-office-seating-evolve-italla': {
-    alt: 'Three MITO chairs: black on a cantilever frame, blue on a swivel base, black on four legs',
+    alt: 'Three MITO chairs: dark green on a cantilever frame, blue on a swivel base, black on four legs',
     slug: 'mito-office-seating', name: 'MITO Office Seating, Evolve Italla', short: 'MITO seating',
     description: 'An office seating line designed to be comfortable, ergonomic, simple and elegant: strong yet lightweight, flexible and affordable.',
     source: 'Portfolio page',
@@ -375,7 +375,7 @@ export const services = [
   {
     key: 'project-management', name: 'Project management',
     summary: 'Clear expectations, schedules and regular progress updates, for small and Fortune 500 companies alike.',
-    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Project_management_image.jpg', w: 1224, h: 868, alt: 'A handheld remote in top, front, side and back views, with its belt clip' },
+    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Project_management_image.jpg', w: 1224, h: 868, alt: 'Rendering of a handheld remote with a red alert key, in top, front, side and back views, with its belt clip' },
     body: [
       'A design program starts with planning and due diligence. We define expectations and responsibilities, set communication procedures and schedules, and ask the questions that make the difference between a delay and a job done on time.',
       'You get progress updates at regular intervals, so you know the status of the project at any time. Our methodology tracks milestones to keep the work on task and on budget, for small companies and Fortune 500 companies alike.',
@@ -395,7 +395,7 @@ export const services = [
   {
     key: 'industrial-design', name: 'Industrial design',
     summary: 'Concepts, form and design language that add functional, emotional, cultural and social value.',
-    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Industrial_design_image.jpg', w: 1224, h: 868, alt: 'Renders of a rugged square handheld device in front, side, top and angled views' },
+    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Industrial_design_image.jpg', w: 1224, h: 868, alt: 'Marker renderings of a rugged square device with rubber corner bumpers and a connector panel, in front, side, top and angled views' },
     body: [
       'By finding and strengthening the functional, emotional, cultural and social benefits of a product, we raise its value to the person who uses it.',
       'We observe and brainstorm, develop functional concepts, suggest new features and better materials, and create design languages that encourage ownership and build strong brands, for challenging products and for the simplest ones.',
@@ -405,7 +405,7 @@ export const services = [
   {
     key: 'mechanical-design', name: 'Mechanical design',
     summary: 'Mechanisms and electro-mechanical solutions, from quick proofs of concept to long programs.',
-    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Mechanical_design_image.jpg', w: 1224, h: 868, alt: 'Exploded view of a handheld device: housing halves, circuit boards, battery and screws' },
+    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Mechanical_design_image.jpg', w: 1224, h: 868, alt: 'Exploded render of a grey Unitron Hearing remote: housing, circuit boards, battery, inner frame and screws' },
     body: [
       'Mechanical design for every stage of development, complementing your own team’s strengths: from quick-turnaround proof-of-concept projects to sustained innovation programs.',
       'Our mechanical design and engineering resources bring experience across many industries and applications.',
@@ -415,7 +415,7 @@ export const services = [
   {
     key: 'product-engineering', name: 'Product engineering',
     summary: 'Engineering from the start of a project, so the design meets its function and its manufacturing.',
-    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Product_engineering_image.jpg', w: 1224, h: 868, alt: 'Finite element stress plot of a molded part, with peak stresses marked in MPa' },
+    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Product_engineering_image.jpg', w: 1224, h: 868, alt: 'Finite element stress plot of a ribbed molded part, with the 60.5 MPa peak marked in the overmolding region' },
     body: [
       'Engineering expertise and manufacturing know-how set Evolve apart from other design firms. Our multidisciplinary approach keeps the design intent of the original concept intact in the final product.',
       'Whether the project is a new technology or a new design around an existing platform, engineering is involved from the start, so the design meets its functional requirements and its manufacturing needs. Our team works closely with designers, clients and manufacturing partners.',
@@ -425,7 +425,7 @@ export const services = [
   {
     key: 'plastics-engineering', name: 'Plastics engineering',
     summary: 'Over 700 injection-molded parts engineered. Part design, materials, mold filling and tooling.',
-    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Plastics_engineering_image.jpg', w: 1224, h: 868, alt: 'Mold filling simulation of a plastic part and its runner system, coloured by fill time' },
+    image: { src: 'https://www.evolve-designsolutions.com/wp-content/uploads/2016/02/Plastics_engineering_image.jpg', w: 1224, h: 868, alt: 'Mold filling simulation of three plastic parts and their runner system, coloured by fill time' },
     body: [
       'A successful plastic product needs part design optimization, material selection, feasibility, cost evaluation, mold design, process selection and prototyping. Our plastics experience covers a wide range of end-use applications: injection molding, part design, material selection, insert molding, gas assist, assembly, painting and decorating.',
       'Our computer-aided engineering (CAE) makes sure your parts are designed for the resins and processes you choose, which reduces prototyping, tooling and physical testing costs.',

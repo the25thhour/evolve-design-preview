@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import * as C from './data/content.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const VERSION = 'evolve-20261017c';
+const VERSION = 'evolve-20261017d';
 const YEAR = new Date().getFullYear();
 const REVIEW = true; // the preview bar and the notes page; set false (and delete review/) at launch
 const portfolio = Object.values(JSON.parse(readFileSync(join(ROOT, 'data/portfolio.json'), 'utf8')));
@@ -29,15 +29,17 @@ const EMAIL = { href: 'mailto:info@evolve-designsolutions.com?subject=Project%20
 const ADDRESS = ['6999 Donwel Drive', 'Ottawa, Ontario K4P 1M7', 'Canada'];
 const MAPS = 'https://www.google.com/maps/search/?api=1&query=6999%20Donwel%20Drive%2C%20Ottawa%2C%20ON%20K4P%201M7';
 
-// The process and craft images (About and Services pages of the current site), described from the images.
+// The process and craft images (About and Services pages of the current site). Alt text written from
+// the images themselves, viewed in a browser on 2026-10-17; the Services ones share the alt in content.mjs.
+const svcImage = (key) => C.services.find((s) => s.key === key).image;
 const CRAFT = {
-  sketch: { src: UP + '2016/02/Vision_business.jpg', w: 1224, h: 868, alt: 'Pencil ideation sketches of handheld remote concepts in front, side and back views', cap: 'Ideation: pencil sketches of handheld concepts' },
-  marker: { src: UP + '2016/02/personal_welcome.jpg', w: 1224, h: 868, alt: 'Marker rendering of a blue handheld device concept with handwritten design notes and four colour options', cap: 'Rendering: a marker concept with design notes' },
-  exploded: { src: UP + '2016/02/Mechanical_design_image.jpg', w: 1224, h: 868, alt: 'Exploded view of a handheld device: housing halves, circuit boards, battery and screws', cap: 'Engineering: an exploded assembly' },
-  fea: { src: UP + '2016/02/Product_engineering_image.jpg', w: 1224, h: 868, alt: 'Finite element stress plot of a molded part, with peak stresses marked in MPa', cap: 'Analysis: a finite element stress plot' },
-  fill: { src: UP + '2016/02/Plastics_engineering_image.jpg', w: 1224, h: 868, alt: 'Mold filling simulation of a plastic part and its runner system, coloured by fill time', cap: 'Tooling: a mold filling simulation' },
-  tool: { src: UP + '2016/02/Manufacturing_support_image.jpg', w: 1224, h: 868, alt: 'Clear dome-shaped part on the core of an injection mold, inside the molding machine', cap: 'Production: a molded part on the mold core' },
-  mission: { src: UP + '2016/02/Mission_statement.jpg', w: 1600, h: 1134, alt: 'Close-up of a round grey part, with concentric rings at its centre and ribs around its wall' },
+  sketch: { src: UP + '2016/02/Vision_business.jpg', w: 1224, h: 868, alt: 'Pencil sketch sheet of handheld remote concepts in front, side and back views, with notes on soft-touch keys, an LED and the battery bay', cap: 'Define: pencil ideation of handheld concepts' },
+  marker: { src: UP + '2016/02/personal_welcome.jpg', w: 1224, h: 868, alt: 'Marker rendering of a blue handheld device with a chrome bezel, handwritten design notes and four colour options', cap: 'Define: a marker rendering with design notes' },
+  exploded: { ...svcImage('mechanical-design'), cap: 'Design: a 3D CAD assembly, exploded' },
+  fea: { ...svcImage('product-engineering'), cap: 'Deliver: finite element stress analysis' },
+  fill: { ...svcImage('plastics-engineering'), cap: 'Deliver: mold filling analysis' },
+  tool: { ...svcImage('manufacturing-support'), cap: 'Deliver: a molded part on the mold core' },
+  mission: { src: UP + '2016/02/Mission_statement.jpg', w: 1600, h: 1134, alt: 'Inside of a dark grey molded round part, with concentric rings at its base and ribs around its wall' },
   concept: { src: UP + '2017/09/slider2.png', w: 3000, h: 1245, alt: 'Concept renders of three portable electronic devices in white and grey with red accent lines' },
 };
 
@@ -57,7 +59,12 @@ const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 
 const words = (n) => (n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? '-' + ONES[n % 10] : ''));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-const trimDesc = (d, max = 155) => (d.length > max ? d.slice(0, d.lastIndexOf(' ', max - 1)) + '…' : d);
+// Meta descriptions stay under about 155 characters, cut at a sentence end where one is close enough.
+const trimDesc = (d, max = 155) => {
+  if (d.length <= max) return d;
+  const stop = d.lastIndexOf('. ', max - 1);
+  return stop >= 80 ? d.slice(0, stop + 1) : d.slice(0, d.lastIndexOf(' ', max - 1)) + '…';
+};
 
 // ---------- projects ----------
 const projects = portfolio
@@ -72,7 +79,7 @@ const projects = portfolio
     if (era === 'earlier' && !early) throw new Error('No earlier-credit mapping for ' + p.credit);
     if (!o.alt) throw new Error('No alt text for ' + p.slug);
     return {
-      ...o, old: p.slug, oldUrl: p.url, order: p.index_order, sector, era,
+      ...o, old: p.slug, oldUrl: p.url, order: p.index_order, sector, era, sourceTitle: p.title,
       firm: early?.firm ?? null,
       credit: o.credit ?? early?.credit ?? p.credit,
       client: o.client ?? null,
@@ -125,7 +132,7 @@ const FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' vi
 function header(r, current) {
   return html`<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-top">
-  ${REVIEW ? `<div class="review-bar"><p>Design preview for review. <a href="${r}review/"${current === 'review' ? ' aria-current="page"' : ''}>Notes for Aldo</a></p></div>` : ''}
+  ${REVIEW ? `<div class="review-bar"><p>Preview for review <span aria-hidden="true">·</span> <a href="${r}review/"${current === 'review' ? ' aria-current="page"' : ''}>Notes for Aldo</a></p></div>` : ''}
   <div class="site-header">
     <a class="brand" href="${r || './'}"${current === 'home' ? ' aria-current="page"' : ''}><img src="${LOGO.src}" width="${LOGO.w}" height="${LOGO.h}" alt="Evolve Design Solutions, home"></a>
     <nav class="site-nav" aria-label="Main">
@@ -177,7 +184,7 @@ function page({ depth = 0, current, title, description, body, bodyClass = '' }) 
   <link rel="icon" type="image/svg+xml" href="${FAVICON}">
   <link rel="preload" href="${r}assets/fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="${r}styles.css?v=${VERSION}">
-  <script>document.documentElement.classList.add('js')</script>
+  <script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.evolveReady)document.documentElement.classList.remove('js')},3000)</script>
   <script src="${r}site.js?v=${VERSION}" defer></script>
 </head>
 <body${bodyClass ? ` class="${bodyClass}"` : ''}>
@@ -196,7 +203,7 @@ ${footer(r)}
 // The link's name is the project, its client and its era, in text, so the era is never colour alone.
 function frame(p, r, { i = 0, k = 0, eager = false } = {}) {
   const name = [p.name, p.client, p.eraLabel].filter(Boolean).join('. ') + '.';
-  return `<a class="frame frame-${p.era}${k >= 2 ? ' frame-extra' : ''}" href="${r}work/${p.slug}/" data-era="${p.era}" data-run="${p.sector.key}" data-name="${esc(p.name)}" data-desc="${esc((p.client ? p.client + '. ' : '') + p.eraLabel + '.')}" data-reveal style="--i:${i}">`
+  return `<a class="frame frame-${p.era}${k >= 2 ? ' frame-extra' : ''}" href="${r}work/${p.slug}/" data-era="${p.era}" data-run="${p.sector.key}" data-name="${esc(p.name)}" data-desc="${esc((p.client ? p.client + '. ' : '') + p.eraLabel + '.')}" data-develop style="--i:${i}">`
     + `<span class="frame-pic">${img(p.image, { alt: '', lazy: !eager })}</span>`
     + `<span class="tag" aria-hidden="true">${esc(p.short)}</span><span class="visually-hidden">${esc(name)}</span></a>`;
 }
@@ -204,7 +211,7 @@ function frame(p, r, { i = 0, k = 0, eager = false } = {}) {
 // render's own white ground.
 function bigFrame(p, r, { eager = false } = {}) {
   return `<a class="frame frame-big frame-${p.era}" href="${r}work/${p.slug}/" data-era="${p.era}" data-run="${p.sector.key}" data-name="${esc(p.name)}" data-desc="${esc((p.client ? p.client + '. ' : '') + p.eraLabel + '.')}">`
-    + `<span class="frame-pic shutter" data-reveal>${img(p.render, { lazy: !eager, priority: eager })}</span>`
+    + `<span class="frame-pic" data-develop>${img(p.render, { lazy: !eager, priority: eager })}</span>`
     + `<span class="big-cap"><span class="big-name">${esc(p.name)}</span><span class="big-desc">${esc(p.description)}</span><span class="big-era tag-${p.era}">${esc(p.client ? p.client + '. ' + p.eraLabel : p.eraLabel)}</span></span></a>`;
 }
 function runCell(s, r) {
@@ -290,7 +297,7 @@ ${runs}
     ${C.phases.map((ph, n) => `<li class="stair" style="--step:${n}"><p class="stair-line">${esc(ph.line)}</p><p class="stair-text">${esc(ph.summary)}</p></li>`)}
   </ol>
   <div class="craft">
-    ${craft.map((key, n) => { const c = CRAFT[key]; return `<figure class="craft-item craft-${key}"><span class="craft-pic" data-reveal style="--i:${n % 4}">${img(c)}</span><figcaption>${esc(c.cap)}</figcaption></figure>`; })}
+    ${craft.map((key, n) => { const c = CRAFT[key]; return `<figure class="craft-item craft-${key}"><span class="craft-pic" data-develop style="--i:${n < 2 ? n : n - 2}">${img(c)}</span><figcaption>${esc(c.cap)}</figcaption></figure>`; })}
   </div>
   <p class="process-more"><a class="text-link" href="capabilities/#process">The 4D process in full</a></p>
 </section>
@@ -353,7 +360,7 @@ function workIndex() {
 </section>
 
 <div class="render-band">
-  ${renders.map((p) => `<a class="render frame-${p.era}" href="${p.slug}/"><span class="frame-pic shutter" data-reveal>${img(p.render)}</span><span class="tag">${esc(p.name)}</span></a>`)}
+  ${renders.map((p) => `<a class="render frame-${p.era}" href="${p.slug}/"><span class="frame-pic" data-develop>${img(p.render)}</span><span class="tag">${esc(p.name)}</span></a>`)}
 </div>
 
 <section class="ledger-section" aria-labelledby="ledger-title">
@@ -384,7 +391,7 @@ function workIndex() {
       ${bySector.map((s) => html`<div class="ledger-group" id="${s.key}" data-group="${s.key}">
         <h3 class="ledger-head">${esc(s.label)}</h3>
         <ul class="ledger-rows">
-          ${s.list.map((p, n) => `<li class="ledger-row" data-sector="${s.key}" data-era="${p.era}"><a href="${p.slug}/" data-src="${esc(p.image.src)}" data-w="${p.image.w}" data-h="${p.image.h}" data-tag="${esc(p.eraLabel)}" data-era="${p.era}"><span class="row-thumb" data-reveal style="--i:${n % 4}">${img(p.image, { alt: '' })}</span><span class="row-name">${esc(p.name)}</span><span class="row-client">${esc(p.client ?? '')}</span><span class="row-era">${p.era === 'evolve' ? 'Evolve' : 'Aldo at ' + esc(p.firm)}</span></a></li>`)}
+          ${s.list.map((p, n) => `<li class="ledger-row" data-sector="${s.key}" data-era="${p.era}"><a href="${p.slug}/" data-src="${esc(p.image.src)}" data-w="${p.image.w}" data-h="${p.image.h}" data-tag="${esc(p.eraLabel)}" data-era="${p.era}"><span class="row-thumb" data-develop>${img(p.image, { alt: '' })}</span><span class="row-name">${esc(p.name)}</span><span class="row-client">${esc(p.client ?? '')}</span><span class="row-era">${p.era === 'evolve' ? 'Evolve' : 'Aldo at ' + esc(p.firm)}</span></a></li>`)}
         </ul>
       </div>`)}
     </div>
@@ -466,7 +473,8 @@ ${contactBand(r)}`;
   return page({
     depth: 2, current: 'work',
     title: `${p.name} | Evolve Design Solutions`,
-    description: p.description ?? `${p.name}. ${p.credit}.`,
+    // short descriptions get the client and credit, so no meta description is a fragment
+    description: p.description && p.description.length >= 100 ? p.description : [p.description ?? p.name + '.', p.client && `Client: ${p.client}.`, p.credit + '.'].filter(Boolean).join(' '),
     body,
   });
 }
@@ -491,7 +499,7 @@ function capabilities() {
   ${C.services.map((g) => html`<article class="discipline" id="${g.key}" aria-labelledby="d-${g.key}">
     <div class="disc-head">
       <h3 class="disc-name" id="d-${g.key}">${esc(g.name)}</h3>
-      <figure class="disc-pic" data-reveal>${img(g.image)}</figure>
+      <figure class="disc-pic" data-develop>${img(g.image)}</figure>
     </div>
     <div class="disc-body">${g.body.map((b) => `<p>${esc(b)}</p>`)}</div>
     <ul class="disc-items">${g.items.map((it) => `<li>${esc(it)}</li>`)}</ul>
@@ -524,7 +532,7 @@ ${contactBand(r)}`;
   return page({
     depth: 1, current: 'capabilities',
     title: 'Capabilities | Evolve Design Solutions',
-    description: 'Industrial and mechanical design, product and plastics engineering, prototyping, manufacturing support and the 4D process: discover, define, design, deliver.',
+    description: 'Industrial and mechanical design, product and plastics engineering, prototyping and manufacturing support, run on the 4D process.',
     body,
   });
 }
@@ -606,7 +614,7 @@ function about() {
 </section>
 
 <section class="practice section" aria-labelledby="practice-title">
-  <figure class="practice-pic" data-reveal>${img(CRAFT.mission)}</figure>
+  <figure class="practice-pic" data-develop>${img(CRAFT.mission)}</figure>
   <div class="practice-text">
     <h2 class="head" id="practice-title">The practice</h2>
     <div class="practice-item">
@@ -701,28 +709,10 @@ function review() {
   const sc = bySlug('smart-alert-remote-control-alerting-system');
   const sky = bySlug('man-portable-skycase-system');
   const collab = projects.filter((p) => p.era === 'evolve' && /collaboration|Conceptual/i.test(p.credit));
-  const titleChanges = [
-    ['Smart Alert remote Control Alerting sytem', 'Smart Alert Remote Control'],
-    ['Smart Alert Remote Control Alerting System (the second entry)', 'Smart Control Remote'],
-    ['Rechargeable Battery and Energy Storage Management System', 'Energy SharePack'],
-    ['Concierge – Springboard Retail Networks', 'Concierge Shopping Cart Handle'],
-    ['Quantum Micro 321 BTE Hearing Instrument', 'Quantum Micro 321 Hearing Instrument'],
-    ['Moxi 3G Next Generation Hearing Instrument', 'Moxi 3G Hearing Instrument'],
-    ['Premium Packaging for Hearing Instruments', 'Hearing Instrument Packaging'],
-    ['Amisco Zoom Contemporary Dining Table', 'Amisco Zoom Dining Table'],
-    ['Amisco Freestyle Contemporary Stools', 'Amisco Freestyle Stools'],
-    ['Monopiece Toddler Eyewear Plastic Frames', 'Monopiece Toddler Eyewear Frames'],
-    ['Office Seating – Bouty Dharma – Teknion(Vertex Composites)', 'Bouty Dharma Office Seating'],
-    ['Big-Book-Clip-Classroom Spring-Loaded Clip', 'Big Book Classroom Spring-Loaded Clip'],
-    ['Classroom Audio Pod Listening Center', 'Classroom Audio Pod Listening Centre'],
-    ['Stubby Tubby – Premium Shallow Tubs', 'Stubby Tubby Shallow Tubs'],
-    ['Premium Classroom Teaching Easel Station', 'Classroom Teaching Easel Station'],
-    ['Classroom Teaching Easel Adjustable Book Ledge', 'Adjustable Book Ledge'],
-    ['Safety Cap – Classroom Teaching Easel Book Ledge End Caps', 'Safety Cap Book Ledge End Caps'],
-    ['MC Series Deskset Controllers – Motorola (CML Emergeency Services)', 'MC Series Deskset Controllers (client: Motorola, CML Emergency Services)'],
-    ['Painting tray System – Prak-Tik', 'Painting Tray System (client: Prak-Tik)'],
-    ['Pool Security Ladder – Waterpik Technologies(ACM Olympic)', 'Pool Security Ladder (client: Waterpik Technologies, ACM Olympic)'],
-  ];
+  // Every title that differs from the current site, generated from the data so the list is complete.
+  const titleChanges = [...projects].sort((x, y) => x.order - y.order)
+    .filter((p) => p.sourceTitle !== p.name)
+    .map((p) => [p.sourceTitle, p.name + (p.client && p.sourceTitle.includes('–') ? ` (client line: ${p.client})` : '')]);
   const body = html`
 <section class="page-hero review-hero" aria-labelledby="review-title">
   <h1 class="display page-title" id="review-title">Notes for Aldo</h1>
@@ -737,9 +727,9 @@ function review() {
   <ol class="note-list">
     <li><h3>Larger images</h3><p>Every portfolio image on the current site is about 500 pixels wide, the largest size the server holds. Larger renders or photographs (2000 pixels wide or more) would let the work be shown at full size. Most useful first: a single clean render, on white, for each project now shown as a collage or a photograph.</p>
       <div class="sheet sheet-small note-sheet">${sheet(renders, r)}</div></li>
-    <li><h3>A vector logo</h3><p>Only a small image of the logo exists (187 by 60 pixels), so it looks soft on sharp screens. An SVG, EPS or PDF of the current mark would fix that. The mark itself stays exactly as it is.</p></li>
+    <li><h3>A vector logo</h3><p>Only a small image of the logo exists (187 by 60 pixels), so it looks soft on sharp screens. An SVG, EPS or PDF of the current mark would fix that, and would give the site a proper browser icon (the preview uses a plain red “e” for now). The mark itself stays exactly as it is.</p></li>
     <li><h3>A recent portrait</h3><p>The current portrait is 192 by 280 pixels. A newer, larger photograph would let it be shown properly on the About and Contact pages.</p></li>
-    <li><h3>A description for the SkyCase</h3><p>On the current site, the <a href="../work/${sky.slug}/">Man-Portable SkyCase System</a> page shows the text of the Amisco Freestyle stools by mistake, so the preview shows its picture with no description. A line or two about what it is and what Evolve did would complete it.</p></li>
+    <li><h3>A description for the SkyCase</h3><p>On the current site, the <a href="../work/${sky.slug}/">Man-Portable SkyCase System</a> page shows the text of the Amisco Freestyle stools by mistake, so the preview shows its picture with no description. A line or two about what it is and what Evolve did would complete it. Is it the man-portable energy system battery pack from your April 2012 news item (for solar and wind power, tested from -10ºC to +50ºC)? If so, we can use that text.</p></li>
   </ol>
 </section>
 
@@ -751,7 +741,7 @@ function review() {
     <li><h3>Collaborations and concept work</h3><p>${collab.length} Evolve projects are credited as collaborations or concept work (${collab.map((p) => esc(p.name)).join(', ')}). They are grouped with Evolve, and each page shows its exact credit. Is that how you want them presented?</p></li>
     <li><h3>The nine sectors</h3><p>The current site has no categories, so the preview groups the work into nine sectors of our own (hearing instruments, power and batteries, and so on). Would you name or group any of them differently?</p></li>
     <li><h3>“Evolve Italla”</h3><p>The MITO office seating title includes “Evolve Italla”, which the current site does not explain. What does it refer to, and should it stay in the title?</p></li>
-    <li><h3>Process images</h3><p>The sketches, marker rendering, exploded view, stress plot, mold filling simulation and molded part from your About and Services pages now appear on the home page as examples of the process. Are you happy for them to be shown that way? Two others need a word from you: the close-up of a round grey part on About (what is it?), and the concept renders of three portable devices at the top of Capabilities (which project, and whose work?).</p></li>
+    <li><h3>Process images</h3><p>The sketches, marker rendering, exploded view, stress plot, mold filling simulation and molded part from your About and Services pages now appear on the home page as examples of the process, each captioned with the 4D stage it illustrates. Are you happy for them to be shown that way, and are the stages right? Two others need a word from you: the close-up of a round grey part on About (what is it?), and the concept renders of three portable devices at the top of Capabilities (which project, and whose work?).</p></li>
     <li><h3>Testimonials</h3><p>All 15 are quoted exactly as on your current site. Two mention durations that have since grown (“over the last 24 years”, “over 8 years”). Keep them as written, or would you like to ask the authors for an update?</p></li>
     <li><h3>Credentials</h3><p>The preview uses “D.I.D., IDSA, SPE, SME” (your current site uses two different orders). Are your SPE silver and SME senior memberships still current?</p></li>
   </ol>
@@ -769,7 +759,7 @@ function review() {
 <section class="notes section" aria-labelledby="edits-title">
   <h2 class="head" id="edits-title">Edits to confirm</h2>
   <div class="edits">
-    <p>Copy was tightened and typos fixed, but every claim comes from your current site. Counts that go stale (“over 30 years”) became dates (since 1984, founded 2005). Spelling follows Canadian use (colour, centre), with “mold” as the industry term. Project titles were shortened or corrected as follows; client names moved from titles into each page’s client line.</p>
+    <p>Copy was tightened and typos fixed, but every claim comes from your current site. Counts that go stale (“over 30 years”) became dates (since 1984, founded 2005). Spelling follows Canadian use (colour, centre), with “mold” as the industry term. These ${titleChanges.length} project titles differ from the current site; where a client name was part of the title, it now sits in the page’s client line instead.</p>
     <table class="edits-table">
       <caption class="visually-hidden">Project title changes</caption>
       <thead><tr><th scope="col">Current site</th><th scope="col">Preview</th></tr></thead>
@@ -804,4 +794,4 @@ write('data/redirects.csv', 'old_url,new_path\n' + [
   ['https://www.evolve-designsolutions.com/news/', 'about/#press'],
   ...projects.map((p) => [p.oldUrl, `work/${p.slug}/`]),
 ].map((row) => row.join(',')).join('\n') + '\n');
-console.log(`Built ${projects.length} project pages + 6 pages (${count.evolve} Evolve, ${count.earlier} earlier).`);
+console.log(`Built ${projects.length} project pages + ${REVIEW ? 7 : 6} pages (${count.evolve} Evolve, ${count.earlier} earlier).`);

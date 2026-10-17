@@ -1,11 +1,12 @@
 // Evolve Design Solutions, design preview. Small progressive enhancements; every page reads fully without it.
 //
-// Motion rule: nothing is hidden by default. Only pictures below the first screen are held back, and only
-// when the tab is visible, the visitor has not asked for reduced motion, and IntersectionObserver exists.
-// Anything still held back is released at once for printing, when the tab is hidden, or on any error.
+// Motion rule: nothing is ever hidden. Every picture is in its final state in the HTML and CSS. When a
+// picture that started off screen scrolls into view, it gets .is-in, which plays a short "develop" (the
+// colour comes up and the frame settles). Pictures on the first screen never move. The animation lives in
+// CSS under prefers-reduced-motion: no-preference, so reduced motion, print and no-JS all show the final state.
 (() => {
   const d = document;
-
+  window.evolveReady = true; // tells the fallback in <head> that this script ran
   // ----- menu (phones) -----
   const nav = d.querySelector('.site-nav');
   const toggle = nav && nav.querySelector('.nav-toggle');
@@ -16,35 +17,22 @@
     d.addEventListener('click', (e) => { if (nav.classList.contains('is-open') && !nav.contains(e.target)) set(false); });
   }
 
-  // ----- pictures arrive as they enter; content is never hidden otherwise -----
-  const items = [...d.querySelectorAll('[data-reveal]')];
-  const releaseAll = () => { for (const el of items) el.classList.remove('is-pending'); };
-  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ----- pictures develop as they arrive; never hidden -----
   try {
-    if (!calm && 'IntersectionObserver' in window && d.visibilityState === 'visible') {
-      // A clipped element has no visible area, so it is watched through its unclipped parent.
-      const watched = new Map();
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!calm && 'IntersectionObserver' in window) {
+      const armed = new WeakSet(); // seen out of view at least once
       const io = new IntersectionObserver((entries) => {
-        for (const e of entries) if (e.isIntersecting) {
-          for (const el of watched.get(e.target) || []) el.classList.remove('is-pending');
-          watched.delete(e.target); io.unobserve(e.target);
+        for (const e of entries) {
+          if (!e.isIntersecting) { armed.add(e.target); continue; }
+          if (armed.has(e.target)) e.target.classList.add('is-in');
+          io.unobserve(e.target); // once only; a picture in view from the start never animates
         }
-      }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
-      const fold = innerHeight;
-      for (const el of items) {
-        if (el.getBoundingClientRect().top < fold) continue; // the first screen never animates
-        const target = el.parentElement || el;
-        el.classList.add('is-pending');
-        if (!watched.has(target)) { watched.set(target, []); io.observe(target); }
-        watched.get(target).push(el);
-      }
+      }, { threshold: 0 });
+      for (const el of d.querySelectorAll('[data-develop]')) io.observe(el);
     }
-  } catch (err) { releaseAll(); }
-  const forPrint = () => { releaseAll(); for (const im of d.images) im.loading = 'eager'; };
-  window.addEventListener('beforeprint', forPrint);
-  if (window.matchMedia) matchMedia('print').addEventListener?.('change', (e) => { if (e.matches) forPrint(); });
-  d.addEventListener('visibilitychange', () => { if (d.visibilityState === 'hidden') releaseAll(); });
-  window.addEventListener('error', releaseAll);
+  } catch (err) { /* motion is optional */ }
+  window.addEventListener('beforeprint', () => { for (const im of d.images) im.loading = 'eager'; });
 
   // ----- home: the contact sheet -----
   const sheet = d.querySelector('[data-sheet]');
@@ -109,7 +97,6 @@
       if (eraSel) eraSel.value = state.era;
       countEl.textContent = n === rows.length ? `Showing all ${n} projects` : `Showing ${n} of ${rows.length} projects`;
       empty.hidden = n > 0;
-      for (const r of rows) if (!r.hidden) r.querySelector('[data-reveal]')?.classList.remove('is-pending');
       const first = ledger.querySelector('.ledger-row:not([hidden]) a');
       if (first) preview(first);
     };

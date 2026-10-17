@@ -1,26 +1,50 @@
 // Evolve Design Solutions, design preview. Small progressive enhancements; every page reads fully without it.
+//
+// Motion rule: nothing is hidden by default. Only pictures below the first screen are held back, and only
+// when the tab is visible, the visitor has not asked for reduced motion, and IntersectionObserver exists.
+// Anything still held back is released at once for printing, when the tab is hidden, or on any error.
 (() => {
-  window.evolveReady = true;
   const d = document;
 
   // ----- menu (phones) -----
   const nav = d.querySelector('.site-nav');
   const toggle = nav && nav.querySelector('.nav-toggle');
   if (toggle) {
-    const set = (open) => { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', String(open)); toggle.textContent = open ? 'Close' : 'Menu'; };
+    const set = (open) => { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', String(open)); toggle.textContent = open ? 'Close' : 'Menu'; d.documentElement.classList.toggle('menu-open', open); };
     toggle.addEventListener('click', () => set(!nav.classList.contains('is-open')));
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); toggle.focus(); } });
     d.addEventListener('click', (e) => { if (nav.classList.contains('is-open') && !nav.contains(e.target)) set(false); });
   }
 
-  // ----- reveals: once, as each part enters; content stays visible if this never runs -----
-  const items = d.querySelectorAll('[data-reveal]');
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-    items.forEach((el) => io.observe(el));
-  } else items.forEach((el) => el.classList.add('is-in'));
+  // ----- pictures arrive as they enter; content is never hidden otherwise -----
+  const items = [...d.querySelectorAll('[data-reveal]')];
+  const releaseAll = () => { for (const el of items) el.classList.remove('is-pending'); };
+  const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try {
+    if (!calm && 'IntersectionObserver' in window && d.visibilityState === 'visible') {
+      // A clipped element has no visible area, so it is watched through its unclipped parent.
+      const watched = new Map();
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) {
+          for (const el of watched.get(e.target) || []) el.classList.remove('is-pending');
+          watched.delete(e.target); io.unobserve(e.target);
+        }
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
+      const fold = innerHeight;
+      for (const el of items) {
+        if (el.getBoundingClientRect().top < fold) continue; // the first screen never animates
+        const target = el.parentElement || el;
+        el.classList.add('is-pending');
+        if (!watched.has(target)) { watched.set(target, []); io.observe(target); }
+        watched.get(target).push(el);
+      }
+    }
+  } catch (err) { releaseAll(); }
+  const forPrint = () => { releaseAll(); for (const im of d.images) im.loading = 'eager'; };
+  window.addEventListener('beforeprint', forPrint);
+  if (window.matchMedia) matchMedia('print').addEventListener?.('change', (e) => { if (e.matches) forPrint(); });
+  d.addEventListener('visibilitychange', () => { if (d.visibilityState === 'hidden') releaseAll(); });
+  window.addEventListener('error', releaseAll);
 
   // ----- home: the contact sheet -----
   const sheet = d.querySelector('[data-sheet]');
@@ -29,26 +53,20 @@
     const group = d.querySelector('[data-era-toggle]');
     const status = d.querySelector('[data-era-status]');
     const words = { all: 'Showing all projects.', evolve: 'Showing Evolve projects, since 2005. Earlier work is dimmed.', earlier: 'Showing Aldo Balatti’s earlier work. Evolve projects are dimmed.' };
-    if (group) group.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-era]'); if (!b) return;
-      for (const x of group.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
-      if (b.dataset.era === 'all') sheet.removeAttribute('data-show'); else sheet.dataset.show = b.dataset.era;
-      if (status) status.textContent = words[b.dataset.era];
-    });
-    // the run's own cell names the frame under the pointer or the keyboard focus
+    if (group) {
+      group.hidden = false;
+      group.addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-era]'); if (!b) return;
+        for (const x of group.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+        if (b.dataset.era === 'all') sheet.removeAttribute('data-show'); else sheet.dataset.show = b.dataset.era;
+        if (status) status.textContent = words[b.dataset.era];
+      });
+    }
+    // the sector label row names the frame under the pointer or the keyboard focus
     const cells = {};
-    for (const c of sheet.querySelectorAll('.run-cell')) cells[c.dataset.run] = c;
-    const show = (f) => {
-      const c = cells[f.dataset.run]; if (!c) return;
-      const note = c.querySelector('.run-note');
-      note.textContent = `${f.dataset.name}. ${f.dataset.desc}`;
-      c.classList.add('is-live');
-    };
-    const reset = (f) => {
-      const c = cells[f.dataset.run]; if (!c) return;
-      const note = c.querySelector('.run-note');
-      note.textContent = note.dataset.default; c.classList.remove('is-live');
-    };
+    for (const c of sheet.querySelectorAll('.run-cell')) cells[c.id.replace('run-', '')] = c;
+    const show = (f) => { const c = cells[f.dataset.run]; if (!c) return; c.querySelector('.run-note').textContent = `${f.dataset.name}. ${f.dataset.desc}`; c.classList.add('is-live'); };
+    const reset = (f) => { const c = cells[f.dataset.run]; if (!c) return; const n = c.querySelector('.run-note'); n.textContent = n.dataset.default; c.classList.remove('is-live'); };
     sheet.addEventListener('pointerover', (e) => { const f = e.target.closest('.frame'); if (f) show(f); });
     sheet.addEventListener('pointerout', (e) => { const f = e.target.closest('.frame'); if (f && !f.contains(e.relatedTarget)) reset(f); });
     sheet.addEventListener('focusin', (e) => { const f = e.target.closest('.frame'); if (f) show(f); });
@@ -63,10 +81,21 @@
     const rows = [...ledger.querySelectorAll('.ledger-row')];
     const groups = [...ledger.querySelectorAll('.ledger-group')];
     const countEl = ledger.querySelector('[data-count]');
+    const empty = ledger.querySelector('[data-empty]');
     const sectorSel = ledger.querySelector('[data-sector-select]');
     const eraSel = ledger.querySelector('[data-era-select]');
     const state = { sector: 'all', era: 'all' };
     const keys = new Set(groups.map((g) => g.dataset.group));
+    const frameEl = ledger.querySelector('[data-preview]');
+    const pic = frameEl && frameEl.querySelector('img');
+    const tag = frameEl && frameEl.querySelector('[data-preview-tag]');
+    const preview = (a) => {
+      if (!pic || pic.getAttribute('src') === a.dataset.src) return;
+      pic.src = a.dataset.src; pic.width = +a.dataset.w; pic.height = +a.dataset.h;
+      tag.textContent = a.dataset.tag;
+      frameEl.classList.toggle('frame-evolve', a.dataset.era === 'evolve');
+      frameEl.classList.toggle('frame-earlier', a.dataset.era === 'earlier');
+    };
     const apply = () => {
       let n = 0;
       for (const r of rows) {
@@ -79,6 +108,8 @@
       if (sectorSel) sectorSel.value = state.sector;
       if (eraSel) eraSel.value = state.era;
       countEl.textContent = n === rows.length ? `Showing all ${n} projects` : `Showing ${n} of ${rows.length} projects`;
+      empty.hidden = n > 0;
+      for (const r of rows) if (!r.hidden) r.querySelector('[data-reveal]')?.classList.remove('is-pending');
       const first = ledger.querySelector('.ledger-row:not([hidden]) a');
       if (first) preview(first);
     };
@@ -88,43 +119,14 @@
       if (b.dataset.era) state.era = b.dataset.era;
       apply();
     });
+    ledger.querySelector('[data-reset]').addEventListener('click', () => { state.sector = 'all'; state.era = 'all'; apply(); });
     if (sectorSel) sectorSel.addEventListener('change', () => { state.sector = sectorSel.value; apply(); });
     if (eraSel) eraSel.addEventListener('change', () => { state.era = eraSel.value; apply(); });
-
-    const frameEl = ledger.querySelector('[data-preview]');
-    const pic = frameEl && frameEl.querySelector('img');
-    const tag = frameEl && frameEl.querySelector('[data-preview-tag]');
-    const preview = (a) => {
-      if (!pic || pic.dataset.src === a.dataset.src) return;
-      pic.dataset.src = a.dataset.src;
-      pic.src = a.dataset.src; pic.width = +a.dataset.w; pic.height = +a.dataset.h;
-      tag.textContent = a.dataset.tag;
-      frameEl.classList.toggle('frame-evolve', a.dataset.era === 'evolve');
-      frameEl.classList.toggle('frame-earlier', a.dataset.era === 'earlier');
-    };
     ledger.addEventListener('pointerover', (e) => { const a = e.target.closest('.ledger-row a'); if (a) preview(a); });
     ledger.addEventListener('focusin', (e) => { const a = e.target.closest('.ledger-row a'); if (a) preview(a); });
-
-    // a sector named in the address (from a project page's breadcrumb) opens filtered
+    // a sector named in the address (from a breadcrumb or the home sheet) opens filtered
     const fromHash = () => { const k = location.hash.slice(1); if (keys.has(k)) { state.sector = k; apply(); } };
     window.addEventListener('hashchange', fromHash);
     fromHash();
-  }
-
-  // ----- home: what we do -----
-  const svc = d.querySelector('[data-services]');
-  if (svc) {
-    const note = svc.querySelector('[data-svc-note]');
-    const nameEl = note && note.querySelector('.svc-note-name');
-    const textEl = note && note.querySelector('.svc-note-text');
-    let active = null;
-    const on = (g) => {
-      if (!note || g === active) return;
-      if (active) active.classList.remove('is-active');
-      active = g; g.classList.add('is-active');
-      nameEl.textContent = g.dataset.name; textEl.textContent = g.dataset.summary;
-    };
-    svc.addEventListener('pointerover', (e) => { const g = e.target.closest('.svc-group'); if (g) on(g); });
-    svc.addEventListener('focusin', (e) => { const g = e.target.closest('.svc-group'); if (g) on(g); });
   }
 })();

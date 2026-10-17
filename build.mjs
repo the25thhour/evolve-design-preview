@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import * as C from './data/content.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const VERSION = 'evolve-20261017d';
+const VERSION = 'evolve-20261017e';
 const YEAR = new Date().getFullYear();
 const REVIEW = true; // the preview bar and the notes page; set false (and delete review/) at launch
 const portfolio = Object.values(JSON.parse(readFileSync(join(ROOT, 'data/portfolio.json'), 'utf8')));

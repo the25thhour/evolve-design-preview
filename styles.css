@@ -190,11 +190,13 @@ strong { font-weight: 650; }
 .run-cell.is-live .run-note { color: var(--ink); }
 .run-all { display: none; font-weight: 650; }
 
-.frame-big { grid-column: 1 / -1; position: relative; }
-.frame-big .frame-pic { aspect-ratio: 3000 / 1245; }
+/* The two 3000px renders: caption in the first three columns, the render across the other nine. The
+   renders' empty left fifth is cropped away, so the products stay large and never sit under the text. */
+.frame-big { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); align-items: center; }
+.frame-big .frame-pic { grid-column: 4 / -1; grid-row: 1; aspect-ratio: 1.9 / 1; }
 .frame-big .frame-pic img { object-fit: cover; object-position: 100% 50%; }
-.big-cap { position: absolute; left: clamp(1rem, 2.5vw, 2.5rem); top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.75rem; width: min(28%, 25rem); }
-.big-name { font-size: var(--step-statement); font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
+.big-cap { grid-column: 1 / span 3; grid-row: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding-left: 0.9rem; }
+.big-name { font-size: clamp(1.375rem, 0.9rem + 1.1vw, 2rem); font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
 .big-desc { font-size: 1rem; line-height: 1.45; }
 .big-era { padding: 0.3rem 0.6rem; font-size: var(--step-small); font-weight: 600; }
 .tag-evolve { background: var(--ink); color: var(--bg); }
@@ -211,7 +213,9 @@ strong { font-weight: 650; }
 .sheet[data-show='earlier'] .frame-evolve .tag { background: var(--surface); color: var(--muted); }
 
 @media (max-width: 68.74rem) {
-  .big-cap { position: static; width: auto; padding: 0.6rem 0 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.75rem; }
+  .frame-big { display: flex; flex-direction: column; align-items: stretch; }
+  .frame-big .frame-pic { aspect-ratio: 2.2 / 1; }
+  .big-cap { padding: 0.6rem 0 0; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.75rem; }
   .big-name { font-size: var(--step-lead); font-weight: 750; letter-spacing: -0.02em; }
   .big-desc { display: none; }
 }

@@ -7,7 +7,7 @@
    the process, the footer's contact tile, focus rings. Nothing else is tinted; the products carry colour.
    Type: Schibsted Grotesk (OFL, self-hosted, variable 400-900). Square corners everywhere.
    Visibility: nothing is ever hidden by motion. Pictures are in their final state in HTML and CSS; site.js
-   adds .is-in to a picture that scrolls into view, which plays a short develop (colour up, frame settles).
+   adds .is-in to a picture that scrolls into view, which plays a short develop or settle (see motion).
    No-JS, print, a background tab and reduced motion all show the final state. */
 
 @font-face {
@@ -669,17 +669,18 @@ strong { font-weight: 650; }
   .note-sheet.sheet-small .frame:nth-child(n+5) { display: flex; }
 }
 
-/* ---------- motion: one move, on pictures only, never hiding anything ----------
-   The develop: as a picture that started off screen arrives, its colour comes up from grey and the frame
-   settles from a slight enlargement, like a print coming up in the tray. The products carry the colour,
-   so the colour is what arrives. Text never moves. */
-@keyframes develop {
-  from { filter: grayscale(1) contrast(0.92); transform: scale(1.035); }
-  to { filter: none; transform: none; }
-}
+/* ---------- motion: on pictures only, never hiding anything ----------
+   As a picture that started off screen arrives, it develops, like a print coming up in the tray. The
+   products carry the colour, so on the sheet the colour is what arrives, row by row. The two large renders
+   carry the signature: a slow settle from close in. Process images settle without the colour change,
+   since most are drawings. Text never moves. Every keyframe ends on the element's own resting state. */
+@keyframes develop { from { filter: grayscale(1) contrast(0.92); } to { filter: none; } }
+@keyframes settle { from { transform: scale(1.06); } to { transform: none; } }
+@keyframes settle-develop { from { filter: grayscale(1); transform: scale(1.1); } to { filter: none; transform: none; } }
 @media (prefers-reduced-motion: no-preference) {
-  .is-in img { animation: develop 1000ms var(--ease-soft) backwards; animation-delay: calc(var(--i, 0) * 70ms); }
-  .frame-big.is-in img, .frame-big .is-in img, .render .is-in img { animation-duration: 1500ms; }
+  .frame.is-in img, .row-thumb.is-in img { animation: develop 800ms var(--ease-soft) backwards; animation-delay: calc(var(--i, 0) * 80ms); }
+  .frame-big .is-in img, .render .is-in img { animation: settle-develop 1600ms var(--ease-soft) backwards; }
+  .craft-pic.is-in img, .disc-pic.is-in img, .practice-pic.is-in img { animation: settle 1300ms var(--ease-soft) backwards; animation-delay: calc(var(--i, 0) * 90ms); }
   .frame:active, .render:active { transform: scale(0.985); transition: transform var(--t-press) var(--ease-out); }
 }
 @media (prefers-reduced-motion: reduce) {

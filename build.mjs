@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import * as C from './data/content.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const VERSION = 'evolve-20261017e';
+const VERSION = 'evolve-20261017f';
 const YEAR = new Date().getFullYear();
 const REVIEW = true; // the preview bar and the notes page; set false (and delete review/) at launch
 const portfolio = Object.values(JSON.parse(readFileSync(join(ROOT, 'data/portfolio.json'), 'utf8')));
@@ -712,7 +712,8 @@ function review() {
   // Every title that differs from the current site, generated from the data so the list is complete.
   const titleChanges = [...projects].sort((x, y) => x.order - y.order)
     .filter((p) => p.sourceTitle !== p.name)
-    .map((p) => [p.sourceTitle, p.name + (p.client && p.sourceTitle.includes('–') ? ` (client line: ${p.client})` : '')]);
+    // the current site's spaced en dashes are shown as hyphens: no dashes in site copy, the wording is unchanged
+    .map((p) => [p.sourceTitle.replace(/ – /g, ' - '), p.name + (p.client && p.sourceTitle.includes('–') ? ` (client line: ${p.client})` : '')]);
   const body = html`
 <section class="page-hero review-hero" aria-labelledby="review-title">
   <h1 class="display page-title" id="review-title">Notes for Aldo</h1>

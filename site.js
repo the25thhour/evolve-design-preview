@@ -1,20 +1,26 @@
 // Evolve Design Solutions, design preview. Small progressive enhancements; every page reads fully without it.
 //
 // Motion rule: nothing is ever hidden. Every picture is in its final state in the HTML and CSS. When a
-// picture that started off screen scrolls into view, it gets .is-in, which plays a short "develop" (the
-// colour comes up and the frame settles). Pictures on the first screen never move. The animation lives in
+// picture that started off screen scrolls into view (IntersectionObserver, no scroll listeners), it gets
+// .is-in, which plays a short "develop" in CSS: a greyscale veil over the picture fades out (opacity), and
+// the large renders settle (transform). Pictures on the first screen never move. The animation lives in
 // CSS under prefers-reduced-motion: no-preference, so reduced motion, print and no-JS all show the final state.
 (() => {
   const d = document;
   window.evolveReady = true; // tells the fallback in <head> that this script ran
-  // ----- menu (phones) -----
+  // ----- menu (phones): button with aria-expanded and aria-controls; Escape closes and returns focus;
+  // a link inside the menu, a click outside it, or focus leaving the nav (Tab past the last link) closes it -----
   const nav = d.querySelector('.site-nav');
   const toggle = nav && nav.querySelector('.nav-toggle');
   if (toggle) {
+    const list = d.getElementById(toggle.getAttribute('aria-controls'));
     const set = (open) => { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', String(open)); toggle.textContent = open ? 'Close' : 'Menu'; d.documentElement.classList.toggle('menu-open', open); };
     toggle.addEventListener('click', () => set(!nav.classList.contains('is-open')));
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); toggle.focus(); } });
     d.addEventListener('click', (e) => { if (nav.classList.contains('is-open') && !nav.contains(e.target)) set(false); });
+    if (list) list.addEventListener('click', (e) => { if (e.target.closest('a') && nav.classList.contains('is-open')) set(false); });
+    // relatedTarget is where focus goes next; moving between the toggle and the links stays open
+    nav.addEventListener('focusout', (e) => { if (nav.classList.contains('is-open') && e.relatedTarget && !nav.contains(e.relatedTarget)) set(false); });
   }
 
   // ----- pictures develop as they arrive; never hidden -----
@@ -99,6 +105,7 @@
       empty.hidden = n > 0;
       const first = ledger.querySelector('.ledger-row:not([hidden]) a');
       if (first) preview(first);
+      if (frameEl) frameEl.hidden = n === 0; // no stale picture beside an empty result
     };
     filters.addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;

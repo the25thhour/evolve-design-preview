@@ -40,33 +40,6 @@
   } catch (err) { /* motion is optional */ }
   window.addEventListener('beforeprint', () => { for (const im of d.images) im.loading = 'eager'; });
 
-  // ----- home: the contact sheet -----
-  const sheet = d.querySelector('[data-sheet]');
-  if (sheet) {
-    // era toggle: dims the frames of the other era, so either body of work can be read on its own
-    const group = d.querySelector('[data-era-toggle]');
-    const status = d.querySelector('[data-era-status]');
-    const words = { all: 'Showing all projects.', evolve: 'Showing Evolve projects, since 2005. Earlier work is dimmed.', earlier: 'Showing Aldo Balatti’s earlier work. Evolve projects are dimmed.' };
-    if (group) {
-      group.hidden = false;
-      group.addEventListener('click', (e) => {
-        const b = e.target.closest('button[data-era]'); if (!b) return;
-        for (const x of group.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
-        if (b.dataset.era === 'all') sheet.removeAttribute('data-show'); else sheet.dataset.show = b.dataset.era;
-        if (status) status.textContent = words[b.dataset.era];
-      });
-    }
-    // the sector label row names the frame under the pointer or the keyboard focus
-    const cells = {};
-    for (const c of sheet.querySelectorAll('.run-cell')) cells[c.id.replace('run-', '')] = c;
-    const show = (f) => { const c = cells[f.dataset.run]; if (!c) return; c.querySelector('.run-note').textContent = `${f.dataset.name}. ${f.dataset.desc}`; c.classList.add('is-live'); };
-    const reset = (f) => { const c = cells[f.dataset.run]; if (!c) return; const n = c.querySelector('.run-note'); n.textContent = n.dataset.default; c.classList.remove('is-live'); };
-    sheet.addEventListener('pointerover', (e) => { const f = e.target.closest('.frame'); if (f) show(f); });
-    sheet.addEventListener('pointerout', (e) => { const f = e.target.closest('.frame'); if (f && !f.contains(e.relatedTarget)) reset(f); });
-    sheet.addEventListener('focusin', (e) => { const f = e.target.closest('.frame'); if (f) show(f); });
-    sheet.addEventListener('focusout', (e) => { const f = e.target.closest('.frame'); if (f) reset(f); });
-  }
-
   // ----- work index: filters and the side preview -----
   const ledger = d.querySelector('[data-ledger]');
   if (ledger) {
